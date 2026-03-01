@@ -53,10 +53,7 @@ if not exist "%SEVENZIP_EXE%" (
     exit /b
 )
 
-:: Vytvoření složky verze (např. dist\1.1)
-if not exist "%VERSION_FOLDER%" (
-    mkdir "%VERSION_FOLDER%"
-)
+
 
 :: Zabalení obsahu pomocí 7za.exe do formátu ZIP
 if exist "%SOURCE_DIR%" (
