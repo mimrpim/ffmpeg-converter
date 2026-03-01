@@ -5,16 +5,27 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import threading
 
+def resource_path(relative_path):
+    """ Získá absolutní cestu k souboru, funguje pro vývoj i pro PyInstaller """
+    try:
+        # PyInstaller vytvoří dočasnou složku a uloží cestu do _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 class MimConverter:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("mimrpim Video Converter")
-        self.root.geometry("400x180")
+        self.root.geometry("284x100")
         self.root.resizable(False, False)
+        self.root.protocol("WM_DELETE_WINDOW", self.pri_uzavreni)
         
         # Pokus o nastavení ikony
         try:
-            self.root.iconbitmap("icon.ico")
+            self.root.iconbitmap(resource_path("icon.ico"))
         except:
             pass
 
@@ -23,7 +34,7 @@ class MimConverter:
 
         tk.Label(self.root, textvariable=self.label_var, wraplength=350, pady=15).pack()
         
-        self.progress_bar = ttk.Progressbar(self.root, length=320, mode='determinate', variable=self.progress_var)
+        self.progress_bar = ttk.Progressbar(self.root, length=250, mode='determinate', variable=self.progress_var)
         self.progress_bar.pack(pady=5)
         
         self.files = []
@@ -41,6 +52,7 @@ class MimConverter:
             )
             if not selected_files:
                 self.label_var.set("Nebyly vybrány žádné soubory.")
+                os._exit(0)
                 return
             self.files = list(selected_files)
         else:
@@ -61,7 +73,7 @@ class MimConverter:
             '-of', 'default=noprint_wrappers=1:nokey=1', filename
         ]
         try:
-            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, check=True)
+            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, check=True, shell=False)
             return float(result.stdout)
         except:
             return 0
@@ -92,7 +104,8 @@ class MimConverter:
                 stderr=subprocess.DEVNULL,
                 text=True, 
                 bufsize=1, 
-                universal_newlines=True
+                universal_newlines=True,
+                shell=False
             )
 
             for line in process.stdout:
@@ -113,8 +126,9 @@ class MimConverter:
         self.progress_var.set(100)
         
         # Zobrazení OK okna na konci
-        messagebox.showinfo("Hotovo", "Všechna videa byla úspěšně zkonvertována, mimrpime!")
+        messagebox.showinfo("Hotovo", "Všechna videa byla úspěšně zkonvertována.")
         self.root.destroy()
+        os._exit(0)
 
     def start_conversion(self):
         t = threading.Thread(target=self.convert_thread, daemon=True)
@@ -122,7 +136,19 @@ class MimConverter:
 
     def run(self):
         self.root.mainloop()
-
+    
+    def pri_uzavreni(self):
+        # Tato část se teď spustí OPRAVDU až při zavření
+        if messagebox.askokcancel("Ukončit", "Opravdu chceš zavřít program?"):
+            moje_pid = os.getpid()
+            try:
+                # Vystřelí všechny subprocessy neviditelně
+                subprocess.call(
+                    ['taskkill', '/F', '/T', '/PID', str(moje_pid)], 
+                    creationflags=0x08000000
+                )
+            except Exception:
+                self.root.destroy()
 if __name__ == "__main__":
     app = MimConverter()
     app.run()
