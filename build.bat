@@ -6,6 +6,6 @@ call ".venv/Scripts/activate.bat"
 pip install -r requirements.txt
 
 :: Spuštění hlavního skriptu a předání všech parametrů (souborů) přes %*
-pyinstaller --onefile --windowed main.py --onedir --icon=icon.ico
+pyinstaller --noconfirm --onedir --windowed --icon="icon.ico" --add-data "icon.ico;." --name "converter to videostudio pro x9" main.py
 
 pause
